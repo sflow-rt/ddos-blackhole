@@ -153,7 +153,7 @@ $(function() {
     dialog.dialog("close");
   }
   function formatTime(ms) {
-    var m = new Date();
+    var m = new Date(ms);
     return  m.getUTCFullYear() +"/"+
      ("0" + (m.getUTCMonth()+1)).slice(-2) +"/"+
      ("0" + m.getUTCDate()).slice(-2) + " " +
