@@ -43,6 +43,12 @@
             <div id="attacks" class="trend"></div>
           </div>
         </div>
+        <div>
+          <h3>BGP</h3>
+          <div>
+            <div id="connections" class="trend"></div>
+          </div>
+        </div>
       </div>
     </div>
     <div id="controls">
@@ -110,14 +116,17 @@
           <div>
             <p>The following configuration steps are required:</p>
             <ol>
-              <li>Configure sFlow on switches and routers</li>
+              <li>Configure sFlow on site router / switches</li>
               <li>Group traffic sources and destinations</li>
-              <li>Provide login credentials for site router</li>
+              <li>Provide credentials for site router</li>
             </ol>
+            <p>Once configuration is complete, the <i>Charts</i> tab will display candidate DDoS traffic and the number of active controls. If the charts show zero traffic, verify that sFlow data is being received and that internal / external traffic groups are correctly defined.</p>
+            <p>The <i>Settings</i> tab provides control over the theshold used to trigger DDoS mitigation, the amount of time to maintain a block, and control over whether manual confirmation is required before installing a block.</p>
+            <p>The <i>Controls</i> tab displays a table of active controls and their current status. Click on entries in the table to confirm or remove controls.</p>
           </div>
         </div>
         <div>
-          <h3>Configure sFlow on all switches</h3>
+          <h3>Configure sFlow on site router / switches</h3>
           <div>
             <p><a href="http://blog.sflow.com/2012/09/switch-configurations.html">Switch configurations</a> contains a repository of links describing how to configure sFlow on different vendor's switches.</p>
           </div>
@@ -129,44 +138,53 @@
 The following example shows the format:</p>
 <pre>{
  "external": [
-  "0.0.0.0/0",
-  "::/0"
+  "0.0.0.0/0"
  ],
  "private": [
   "10.0.0.0/8",
   "172.16.0.0/12",
-  "192.168.0.0/16",
+  "192.168.0.0/16"
  ],
  "multicast": [
   "224.0.0.0/4"
+ ],
+ "exclude": [
+  "A.B.0.0/16"
+ ],
+ "servers": [
+  "A.B.C.0/24"
  ]
 }</pre>
 	    <p>The <i>Groups</i> and <i>CIDRs</i> counts verify that groups have been installed. Buttons are available to refresh the counts, upload new groups, and inspect the installed groups. Add groups to describe address space that can be null routed if attacked.</p>
+            <p>The example above lists the public address space allocated to the site in the <i>exclude</i> group, which by default prevents these addresses (along with addresses in the <i>private</i>, <i>multicast</i>, and <i>external</i> groups), from being blackholed. Any additional groups are canditates for blackhole routing in the case of a DDoS attack, in this case the CIDR A.B.C.0/24 in the <i>servers</i> group.</p>
           </div>
         </div>
         <div>
-          <h3>Privide login credentials for site router</h3>
+          <h3>Configure BGP connection to site router</h3>
           <div>
-            <p>A router IP address, user name and password are required so that ssh can be used to install null routes. These parameters are set via System Properties</p>
-            <p>The <i>scripts/controls/commands.exp</i> script applies the following command to null route traffic to a targetted IP address:</p>
-<pre>ip route target_ip/32 null0 name &quot;DOS ATTACK&quot;</pre>
-            <p>The commands.exp script can be modified to apply different controls, or the <i>scripts/ddos.js</i> sFlow-RT script that calls commands.exp can be modified to generate syslog events, or post controls through a REST API.</p>
-            <p><b>Note:</b> The <i>expect</i> package must be installed to run <i>commands.exp</i></p>
+            <p>Enable BGP and supply the router IP address and AS number to establish an BGP connection. Provide the community and nexthop address to be used to advertise black hole /32 routes.</p>
+            <p>Configure site router to establish a BGP connection to controller on TCP port 1179. Configure router to drop traffic and trigger an upstream black hole when triggered by the controler.</p>
           </div>
         </div>
         <div>
-          <h3>System Properties</h3>
+          <h3>Startup settings</h3>
           <div>
             <table class="stripe">
               <thead><tr><th>Property</th><th>Default</th><th>Description</th></tr><thead>
               <tbody>
+                <tr class="even"><td>bgp.start</td><td>no</td><td>Start BGP listener</td></tr>
+                <tr class="odd"><td>bgp.port</td><td>1179</td><td>TCP port used to listen for BGP connections</td></tr>
                 <tr class="even"><td>ddos_blackhole.router</td><td>127.0.0.1</td><td>IP address or domain name of router used to implement null routes</td></tr>
-                <tr class="odd"><td>ddos_blackhole.user</td><td>user</td><td>User name for ssh access to router</td></tr>
-                <tr class="even"><td>ddos_blackhole.password</td><td>password</td><td>Password for ssh access to router</td></tr>
+                <tr class="odd"><td>ddos_blackhole.as</td><td>65000</td><td>Local AS number (e.g. 65000) to advertise to router</td></tr>
+                <tr class="even"><td>ddos_blackhole.id</td><td>0.6.6.6</td><td>Local identifier (e.g. 0.0.0.1) to advertise to router</td></tr>
+                <tr class="odd"><td>ddos_blackhole.community</td><td>65535:666</td><td>BGP community used to identify blackhole routes</td></tr>
+                <tr class="even"><td>ddos_blackhole.nexthop</td><td>192.0.2.1</td><td>BGP next hop used to identify blackhole routes</td></tr> 
                 <tr class="odd"><td>ddos_blackhole.externalgroup</td><td>external</td><td>Source address group for external traffic</td></tr>
-                <tr class="even"><td>ddos_blackhole.excludedgroups</td><td>external,private,multicast</td><td>Destination address groups to exclude as blackhole candidates</td></tr>
+                <tr class="even"><td>ddos_blackhole.excludedgroups</td><td>external,private,multicast,exclude</td><td>Destination address groups to exclude as blackhole candidates</td></tr>
+                <tr class="odd"><td>ddos_blackhole.flow_seconds</td><td>2</td><td>Moving average (in seconds) used to smooth flow rates</td></tr>
               </tbody>
             </table>
+            <p>See <a href="http://sflow-rt.com/reference.php#properties">System Properties</a> for information on configuring startup settings.</p>
           </div>
         </div>
       </div>
@@ -175,6 +193,6 @@ The following example shows the format:</p>
   <div id="dialog" title="Modify Control">
     <p><span id="target"></span></p>
   </div>
-  <div id="copyright">Copyright &copy; 2015 InMon Corp. ALL RIGHTS RESERVED</div>
+  <div id="copyright">Copyright &copy; 2015-2017 InMon Corp. ALL RIGHTS RESERVED</div>
 </body>
 </html>

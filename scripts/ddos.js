@@ -1,17 +1,23 @@
 // author: InMon
-// version: 1.0
-// date: 10/10/2015
+// version: 2.0
+// date: 6/15/2017
 // description: Blackhole DDoS flood attacks
-// copyright: Copyright (c) 2015 InMon Corp.
+// copyright: Copyright (c) 2015-2017 InMon Corp.
 
 include(scriptdir()+'/inc/trend.js');
 
 var router_ip = getSystemProperty("ddos_blackhole.router")   || '127.0.0.1';
-var user      = getSystemProperty("ddos_blackhole.user")     || 'user';
-var password  = getSystemProperty("ddos_blackhole.password") || 'password';
+var my_as     = getSystemProperty("ddos_blackhole.as")       || '65000';
+var my_id     = getSystemProperty("ddos_blackhole.id")       || '0.6.6.6';
+var community = getSystemProperty("ddos_blackhole.community")|| '65535:666';
+var nexthop   = getSystemProperty("ddos_blackhole.nexthop")  || '192.0.2.1';
+var localpref = getSystemProperty("ddos_blackhole.localpref")|| '100';
+
+var effectiveSamplingRateFlag = getSystemProperty("ddos_blackhole.esr") === "yes";
+var flow_t = getSystemProperty("ddos_blackhole.flow_seconds")|| '2';
 
 var externalGroup= getSystemProperty("ddos_blackhole.externalgroup")   || 'external';
-var excludedGroups= getSystemProperty("ddos_blackhole.excludedgroups") || 'external,private,multicast';
+var excludedGroups= getSystemProperty("ddos_blackhole.excludedgroups") || 'external,private,multicast,exclude';
 
 var defaultGroups = {
   external:['0.0.0.0/0'],
@@ -26,52 +32,67 @@ var groups = storeGet('groups')               || defaultGroups;
 var threshold = storeGet('threshold')         || 1000000;
 var block_minutes = storeGet('block_minutes') || 60;
 
-var controls;
-var controls_n;
-var controls_id = 0;
+var controls = {};
+
+function updateControlCounts() {
+  var counts = { n: 0, blocked: 0, pending: 0, failed: 0};
+  for(var addr in controls) {
+    counts.n++;
+    switch(controls[addr].status) {
+    case 'blocked':
+      counts.blocked++;
+      break;
+    case 'pending':
+      counts.pending++;
+      break;
+    case 'failed':
+      counts.failed++;
+      break;
+    } 
+  }
+  sharedSet('ddos_blackhole_controls_counts',counts);
+}
 
 var enabled = storeGet('enabled') || false;
 
-var effectiveSamplingRateFlag = false;
+var bgpUp = false;
 
-// modify nullRoute function to select alternative control script
-// or implement controls using http()/syslog() clients
-// op   = set|clear
-// addr = IP v4 address
-function nullRoute(op, addr) {
-  var result = runCmd(
-    ['expect','-f','commands.exp',router_ip,user,password,'null_route',op, addr],
-    null,
-    scriptdir()+'/controls'
-  );
-  if(result.status !== 0) throw "runCmd failed, status=" + result.status;
+function bgpOpen() {
+  bgpUp = true;
+  sharedSet('ddos_blackhole_connections',1);
+
+  // re-install controls
+  for(var addr in controls) {
+    var rec = controls[addr];
+    if(rec.status === 'blocked' || rec.status === 'failed') {
+      if(bgpAddRoute(router_ip,{prefix:addr, nexthop:nexthop, community:community})) {
+        rec.status = 'blocked';
+      }
+      else {
+        logWarning("DDoS block failed, " + addr);
+        rec.status = 'failed';
+      } 
+    }
+  }
+  updateControlCounts();
 }
 
-function updateControlCount() {
-  controls_n= 0;
-  for(var addr in controls) controls_n++;
-  sharedSet('ddos_blackhole_controls_n',controls_n);
-  sharedSet('ddos_blackhole_controls_id',++controls_id);
+function bgpClose() {
+  bgpUp = false;
+  sharedSet('ddos_blackhole_connections',0);
+
+  // update control status
+  for(var addr in controls) {
+    var rec = controls[addr];
+    if(rec.status === 'blocked') rec.status = 'failed';
+  }
+  updateControlCounts();
 }
 
-function restoreControls() {
-  try { controls = storeGet("controls") || {}; }
-  catch(e) { logWarning("restoreControls, error=" + e.message); }
-  updateControlCount();
-}
-
-function saveControls() {
-  try { storeSet("controls", controls); }
-  catch(e) { logWarning("saveControls, error=" + e.message); }
-  updateControlCount();
-}
-
-// restore previous controls on startup
-restoreControls();
+bgpAddNeighbor(router_ip, my_as, my_id, null, bgpOpen, bgpClose);
 
 setGroups('ddos_blackhole', groups);
 
-var flow_t = 2;
 setFlow('ddos_blackhole_target', 
   { keys:'ipdestination,group:ipdestination:ddos_blackhole', value:'frames', filter:filter, t:flow_t }
 );
@@ -90,54 +111,51 @@ setDDoSThreshold(threshold);
 
 function block(address,info,operator) {
   if(!controls[address]) {
-    logInfo("blocking " + address);
+    logInfo("DDoS blocking " + address);
     let rec = { action: 'block', time: (new Date()).getTime(), status:'pending', info:info };
     controls[address] = rec;
     if(enabled || operator) {
-      try {
-        nullRoute('set', address);
+      if(bgpAddRoute(router_ip,{prefix:address, nexthop:nexthop, community:community, localpref:localpref})) {
         rec.status = 'blocked';
       }
-      catch(e) {
-        logWarning("block failed, " + address + " (" + e + ")");
+      else {
+        logWarning("DDoS block failed, " + address);
         rec.status = 'failed';
       }
     }
-    saveControls();
   } else if(operator) {
     // operator confirmation of existing control
     let rec = controls[address];
     if('pending' === rec.status) {
-       try {
-        nullRoute('set', address);
+      if(bgpAddRoute(router_ip,{prefix:address, nexthop:nexthop, community:community, localpref:localpref})) {
         rec.status = 'blocked';
       }
-      catch(e) {
-        logWarning("block failed, " + address + " (" + e + ")");
+      else {
+        logWarning("DDoS block failed, " + address);
         rec.status = 'failed';
       }
-      saveControls();
     }
   }
+  updateControlCounts();
 }
 
 function allow(address,info,operator) {
   if(controls[address]) {
-    logInfo("allowing " + address);
+    logInfo("DDoS allowing " + address);
     let rec = controls[address];
     if('blocked' === rec.status) {
-      delete controls[address];
-      try {
-        nullRoute('clear',address);
+      if(bgpRemoveRoute(router_ip,address)) {
         delete controls[address];
       }
-      catch(e) {
-        logWarning("allow failed, " + address + " (" + e + ")");
+      else {
+        logWarning("DDoS allow failed, " + address);
         rec.status = 'failed';
       }
-    } else delete controls[address];
-    saveControls();
+    } else {
+      delete controls[address];
+    }
   }
+  updateControlCounts();
 }
 
 setEventHandler(function(evt) {
@@ -151,7 +169,7 @@ setEventHandler(function(evt) {
     if(!dsInfo) return;
     let rate = dsInfo.effectiveSamplingRate;
     if(!rate || rate > (threshold / 10)) {
-      logWarning("effectiveSampling rate " + rate + " too high for " + evt.agent);
+      logWarning("DDoS effectiveSampling rate " + rate + " too high for " + evt.agent);
       return;
     }
   }
@@ -216,7 +234,6 @@ setHttpHandler(function(req) {
         }
         result.controls.push(entry); 
       };
-      result.id = controls_id;
       result.enabled = enabled;
       break;
     case 'threshold':

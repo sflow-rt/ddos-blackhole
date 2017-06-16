@@ -27,7 +27,13 @@ function calculateTopN(metric,n,minVal,total_pps) {
 
 setIntervalHandler(function() {
   points = {};
-  points['controls'] = sharedGet('ddos_blackhole_controls_n') || 0;
+  var counts = sharedGet('ddos_blackhole_controls_counts') || {};
+  points['controls'] = counts.n || 0;
+  points['controls_pending'] = counts.pending || 0;
+  points['controls_failed'] = counts.failed || 0;
+  points['controls_blocked'] = counts.blocked || 0;
+  points['connections'] = sharedGet('ddos_blackhole_connections') || 0;
+  points['routes'] = sharedGet('ddos_blackhole_routes') || 0;
   points['top-5-targets'] = calculateTopN('ddos_blackhole_target',5,1,0);
   points['top-5-protocols'] = calculateTopN('ddos_blackhole_protocol',5,1,0);
   trend.addPoints(points);  

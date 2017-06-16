@@ -5,22 +5,19 @@ $(function() {
   var blockMinutesURL = '../scripts/ddos.js/blockminutes/json';
   var groupsURL = '../scripts/ddos.js/groups/json';
   var groupsInfoURL = '../scripts/ddos.js/groups/info/json';
-  var backgroundColor = '#ffffff';
-  var colors = [
-    '#3366cc','#dc3912','#ff9900','#109618','#990099','#0099c6','#dd4477',
-    '#66aa00','#b82e2e','#316395','#994499','#22aa99','#aaaa11','#6633cc',
-    '#e67300','#8b0707','#651067','#329262','#5574a6','#3b3eac','#b77322',
-    '#16d620','#b91383','#f4359e','#9c5935','#a9c413','#2a778d','#668d1c',
-    '#bea413','#0c5922','#743411'
-  ];
 
   var defaults = {
     tab:0,
     charts0:'show',
     charts1:'hide',
     charts2:'hide',
+    charts3:'hide',
     hlp0:'hide',
-    hlp1:'hide'
+    hlp1:'hide',
+    hlp2:'hide',
+    hlp3:'hide',
+    hlp4:'hide',
+    hlp5:'hide'
   };
 
   var state = {};
@@ -109,9 +106,7 @@ $(function() {
     includeOther:false,
     metric: 'top-5-targets',
     legendHeadings: ['Target IP','Target Group'],
-    colors: colors,
     hrule:[{name:'threshold',color:'red',scale:showThreshold}],
-    backgroundColor: backgroundColor,
     units: 'Packets per Second'},
   db);
   $('#protocols').chart({
@@ -120,17 +115,20 @@ $(function() {
     includeOther:false,
     metric: 'top-5-protocols',
     legendHeadings: ['Target IP','Protocol Stack'],
-    colors: colors,
-    backgroundColor: backgroundColor,
     units: 'Packets per Second'},
   db);
   $('#attacks').chart({
     type: 'trend',
-    stack: false,
-    metrics: ['controls'],
-    colors: colors,
-    backgroundColor: backgroundColor,
+    stack: true,
+    legend: ['Active','Failed','Pending'],
+    metrics: ['controls_blocked','controls_failed','controls_pending'],
     units: 'Number of Controls'},
+  db);
+  $('#connections').chart({
+    type: 'trend',
+    stack: false,
+    metrics: ['connections'],
+    units: 'Connections'},
   db);
 
   var lastControlsID = 0;
