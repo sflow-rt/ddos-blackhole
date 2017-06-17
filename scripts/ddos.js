@@ -57,6 +57,10 @@ var enabled = storeGet('enabled') || false;
 
 var bgpUp = false;
 
+function blockRoute(address) {
+  return {prefix:address, nexthop:nexthop, communities:community, localpref:localpref};
+}
+
 function bgpOpen() {
   bgpUp = true;
   sharedSet('ddos_blackhole_connections',1);
@@ -65,7 +69,7 @@ function bgpOpen() {
   for(var addr in controls) {
     var rec = controls[addr];
     if(rec.status === 'blocked' || rec.status === 'failed') {
-      if(bgpAddRoute(router_ip,{prefix:addr, nexthop:nexthop, community:community})) {
+      if(bgpAddRoute(router_ip, blockRoute(addr))) {
         rec.status = 'blocked';
       }
       else {
@@ -115,7 +119,7 @@ function block(address,info,operator) {
     let rec = { action: 'block', time: (new Date()).getTime(), status:'pending', info:info };
     controls[address] = rec;
     if(enabled || operator) {
-      if(bgpAddRoute(router_ip,{prefix:address, nexthop:nexthop, community:community, localpref:localpref})) {
+      if(bgpAddRoute(router_ip, blockRoute(address))) {
         rec.status = 'blocked';
       }
       else {
@@ -127,7 +131,7 @@ function block(address,info,operator) {
     // operator confirmation of existing control
     let rec = controls[address];
     if('pending' === rec.status) {
-      if(bgpAddRoute(router_ip,{prefix:address, nexthop:nexthop, community:community, localpref:localpref})) {
+      if(bgpAddRoute(router_ip,blockRoute(address))) {
         rec.status = 'blocked';
       }
       else {
