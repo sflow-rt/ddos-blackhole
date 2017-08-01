@@ -290,13 +290,7 @@ $(function() {
   refreshGroups();
 
   function getGroups() {
-    $.ajax({
-      url:groupsURL,
-      dataType: 'json',
-      success: function(data) {
-        location.href = 'data:application/json,' + encodeURIComponent(JSON.stringify(data,null,1));
-      }
-    });
+    location.href = groupsURL;
   }
 
   $('#groupsrefresh').button({icons:{primary:'ui-icon-arrowrefresh-1-e'},text:false}).click(refreshGroups);
