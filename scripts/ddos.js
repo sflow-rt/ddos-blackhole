@@ -245,7 +245,7 @@ setHttpHandler(function(req) {
       switch(req.method) {
         case 'POST':
         case 'PUT':
-          if(req.error) throw "bad_request"
+          if(req.error) throw "bad_request";
           threshold = parseInt(req.body);
           setDDoSThreshold(threshold);
           storeSet('threshold',threshold);
@@ -259,7 +259,7 @@ setHttpHandler(function(req) {
       switch(req.method) {
         case 'POST':
         case 'PUT':
-          if(req.error) throw "bad_request"
+          if(req.error) throw "bad_request";
           block_minutes = parseInt(req.body);
           storeSet('block_minutes',block_minutes);
           break;
