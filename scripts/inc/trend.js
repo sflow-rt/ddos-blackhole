@@ -6,8 +6,8 @@ function Trend(maxPoints, stepSize) {
   for(i = maxPoints - 1; i >= 0; i--) { t -= stepMs; this.times[i] = t; }
 }
 
-Trend.prototype.addPoints = function(values) {
-  this.times.push((new Date).getTime());
+Trend.prototype.addPoints = function(now,values) {
+  this.times.push(now);
   
   var name, i; 
   for (name in values) {

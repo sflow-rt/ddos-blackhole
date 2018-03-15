@@ -193,8 +193,7 @@ setEventHandler(function(evt) {
   block(ip,info,false);
 },['ddos_blackhole_attack']);
 
-setIntervalHandler(function() {
-  var now = (new Date()).getTime();
+setIntervalHandler(function(now) {
   var threshMs = block_minutes * 60000;
   for(var addr in controls) {
     if(now - controls[addr].time > threshMs) allow(addr,{},false);

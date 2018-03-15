@@ -25,7 +25,7 @@ function calculateTopN(metric,n,minVal,total_pps) {
   return topN;
 }
 
-setIntervalHandler(function() {
+setIntervalHandler(function(now) {
   points = {};
   var counts = sharedGet('ddos_blackhole_controls_counts') || {};
   points['controls'] = counts.n || 0;
@@ -36,7 +36,7 @@ setIntervalHandler(function() {
   points['routes'] = sharedGet('ddos_blackhole_routes') || 0;
   points['top-5-targets'] = calculateTopN('ddos_blackhole_target',5,1,0);
   points['top-5-protocols'] = calculateTopN('ddos_blackhole_protocol',5,1,0);
-  trend.addPoints(points);  
+  trend.addPoints(now,points);  
 }, 1);
 
 setHttpHandler(function(req) {
