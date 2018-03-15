@@ -295,7 +295,7 @@ $(function() {
 
   $('#groupsrefresh').button({icons:{primary:'ui-icon-arrowrefresh-1-e'},text:false}).click(refreshGroups);
   $('#groupsget').button({icons:{primary:'ui-icon-search'},text:false}).click(getGroups);
-  $('#groupsfile').hide().change(function(evt) {
+  $('#groupsfile').hide().change(function(event) {
     var input = event.target;
     var reader = new FileReader();
     $this = $(this);
