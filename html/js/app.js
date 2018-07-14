@@ -361,30 +361,28 @@ $(function() {
     $.event.trigger({type:'updateChart'});
   });
 
-  $(document).ready(function() {
-    dialog = $('#dialog').dialog({
-      modal:true,
-      autoOpen:false,
-      buttons: {
-        Remove:removeControl,
-        Install:installControl,
-        Close: function() { dialog.dialog("close"); } 
-      }
-    });
-    $('#controller_mode').buttonset();
-    $('#controller_mode').change(function(evt) {
-      var newMode = $(evt.target).attr('id');
-      if(newMode === ctl_mode) return;
-
-      $.ajax({
-        url:controlsURL,
-        type:'get',
-        data:{action:'automatic' === newMode ? 'enable' : 'disable'}
-      }); 
-      ctl_mode = newMode;
-    });
-    pollTrends();
-    refreshControls();
-    refreshGroups();
+  dialog = $('#dialog').dialog({
+    modal:true,
+    autoOpen:false,
+    buttons: {
+      Remove:removeControl,
+      Install:installControl,
+      Close: function() { dialog.dialog("close"); } 
+    }
   });
+  $('#controller_mode').buttonset();
+  $('#controller_mode').change(function(evt) {
+    var newMode = $(evt.target).attr('id');
+    if(newMode === ctl_mode) return;
+
+    $.ajax({
+      url:controlsURL,
+      type:'get',
+      data:{action:'automatic' === newMode ? 'enable' : 'disable'}
+    }); 
+    ctl_mode = newMode;
+  });
+  pollTrends();
+  refreshControls();
+  refreshGroups();
 });
