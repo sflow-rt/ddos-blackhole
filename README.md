@@ -7,8 +7,9 @@ http://blog.sflow.com/2017/06/remotely-triggered-black-hole-rtbh.html
 
 ## To install
 
-1. Copy files to the sFlow-RT app directory.
-2. Restart sFlow-RT to load application.
+1. [Download sFlow-RT](https://sflow-rt.com/download.php)
+2. Run command: `sflow-rt/get-app.sh sflow-rt ddos-blackhole`
+3. Restart sFlow-RT
 
 Online help is available through web UI.
 
