@@ -11,7 +11,10 @@ http://blog.sflow.com/2017/06/remotely-triggered-black-hole-rtbh.html
 2. Run command: `sflow-rt/get-app.sh sflow-rt ddos-blackhole`
 3. Restart sFlow-RT
 
+Alternatively, use the Docker image:
+https://hub.docker.com/r/sflow/ddos-blackhole/
+
 Online help is available through web UI.
 
 For more information, visit:
-http://www.sFlow-RT.com
+https://sFlow-RT.com
