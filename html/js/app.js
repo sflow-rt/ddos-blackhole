@@ -36,12 +36,12 @@ $(function() {
   }
 
   function getState(key, defVal) {
-    return window.sessionStorage.getItem(key) || state[key] || defVal;
+    return window.sessionStorage.getItem('ddos_blackhole_'+key) || state[key] || defVal;
   }
 
   function setState(key, val, showQuery) {
     state[key] = val;
-    window.sessionStorage.setItem(key, val);
+    window.sessionStorage.setItem('ddos_blackhole_'+key, val);
     if(showQuery) {
       var query = createQuery(state);
       window.history.replaceState({},'',query ? '?' + query : './');
