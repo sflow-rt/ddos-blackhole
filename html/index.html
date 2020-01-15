@@ -109,17 +109,18 @@
 	<div>
 	  <h3>About</h3>	  
 	  <div>
-	    <p>Mitigate effects of DDoS flood attacks on WAN link bandwidth. Protect WAN link  DDoS flood attacks. Rapidly  identifies targetted IP address and installs a null route to drop the attack.</p>
+	    <p>DDoS Blackhole is a real-time distributed denial of service (DDoS) detection and mitigation application using the <a href="https://sflow-rt.com/">sFlow-RT</a> real-time analytics engine. The software receives a continuous stream of telemetry from standard <a href="https://sflow-rt.com/agents.php">sFlow agents</a> embedded in network devices, detects distributed denial of service attacks (DDoS), and pushes BGP remote triggered blackhole messages to block the attack upstream.</p>
+            <p>See <a href="https://blog.sflow.com/2017/06/remotely-triggered-black-hole-rtbh.html">Remotely Triggered Black Hole (RTBH) Routing</a> for detailed example.</p>
 	  </div>    
 	</div>
         <div>
-          <h3>Getting Started</h3>
+          <h3>Getting started</h3>
           <div>
             <p>The following configuration steps are required:</p>
             <ol>
               <li>Configure sFlow on site router / switches</li>
               <li>Group traffic sources and destinations</li>
-              <li>Provide credentials for site router</li>
+              <li>Configure BGP settings</li>
             </ol>
             <p>Once configuration is complete, the <i>Charts</i> tab will display candidate DDoS traffic and the number of active controls. If the charts show zero traffic, verify that sFlow data is being received and that internal / external traffic groups are correctly defined.</p>
             <p>The <i>Settings</i> tab provides control over the theshold used to trigger DDoS mitigation, the amount of time to maintain a block, and control over whether manual confirmation is required before installing a block.</p>
@@ -161,9 +162,9 @@ The following example shows the format:</p>
           </div>
         </div>
         <div>
-          <h3>Configure BGP connection to site router</h3>
+          <h3>Configure BGP settings</h3>
           <div>
-            <p>Enable BGP and supply the router IP address and AS number to establish an BGP connection. Provide the community and nexthop address to be used to advertise black hole /32 routes.</p>
+            <p>Make sure that <i>bgp.start=yes</i> in the sFlow-RT startup settings. Also set <i>ddos_blackhole.router</i>, <i>ddos_blackhole.community</i> and <i>ddos_blackhole.nexthop</i> and any other settings needed to match your ISP and router counfigurations.</p>
             <p>Configure site router to establish a BGP connection to controller on TCP port 1179. Configure router to drop traffic and trigger an upstream black hole when triggered by the controler.</p>
           </div>
         </div>
