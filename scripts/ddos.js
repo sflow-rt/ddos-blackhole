@@ -22,7 +22,7 @@ var excludedGroups= getSystemProperty("ddos_blackhole.excludedgroups") || 'exter
 var defaultGroups = {
   external:['0.0.0.0/0'],
   private:['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16'],
-  multicast:['224.0.0.0/4'],
+  multicast:['224.0.0.0/4']
 };
 
 var filter = 'group:ipsource:ddos_blackhole='+externalGroup;
