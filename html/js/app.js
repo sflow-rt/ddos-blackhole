@@ -131,7 +131,7 @@ $(function() {
     units: 'Connections'},
   db);
 
-  var lastControlsID = 0;
+  var lastControlsUpdate = 0;
   var dialog;
   var selectedTarget;
   function removeControl() {
@@ -166,7 +166,7 @@ $(function() {
       url: controlsURL,
       dataType: 'json',
       success: function(data) {
-        lastControlsID = data.id;
+        lastControlsUpdate = data.update;
         ctl_mode = data.enabled ? "automatic" : "manual";
         if('automatic' === ctl_mode) $('#automatic').click();
         else $('#manual').click();
@@ -347,7 +347,7 @@ $(function() {
       data: db.trend && db.trend.end ? {after:db.trend.end.getTime()} : null,
       success: function(data) {
         updateData(data);
-        if(data && data.trend && data.trend.values && lastControlsID !== data.trend.values.control_id) refreshControls();
+        if(data && data.trend && data.trend.values && lastControlsUpdate !== data.trend.values.update) refreshControls();
         setTimeout(pollTrends, 1000);
       },
       error: function(result,status,errorThrown) {

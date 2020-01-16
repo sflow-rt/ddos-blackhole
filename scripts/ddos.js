@@ -34,8 +34,9 @@ var block_minutes = storeGet('block_minutes') || 60;
 
 var controls = {};
 
+var update = 0;
 function updateControlCounts() {
-  var counts = { n: 0, blocked: 0, pending: 0, failed: 0};
+  var counts = { n: 0, blocked: 0, pending: 0, failed: 0, update: ++update };
   for(var addr in controls) {
     counts.n++;
     switch(controls[addr].status) {
@@ -238,6 +239,7 @@ setHttpHandler(function(req) {
         result.controls.push(entry); 
       };
       result.enabled = enabled;
+      result.update = update;
       break;
     case 'threshold':
       if(path.length > 1) throw "not_found";

@@ -25,9 +25,11 @@ function calculateTopN(metric,n,minVal,total_pps) {
   return topN;
 }
 
+var update = 0;
 setIntervalHandler(function(now) {
   points = {};
   var counts = sharedGet('ddos_blackhole_controls_counts') || {};
+  update = counts.update || 0;
   points['controls'] = counts.n || 0;
   points['controls_pending'] = counts.pending || 0;
   points['controls_failed'] = counts.failed || 0;
@@ -40,7 +42,7 @@ setIntervalHandler(function(now) {
 }, 1);
 
 setHttpHandler(function(req) {
-  var result, key, name, threshold, id, path = req.path;
+  var result, key, name, threshold, path = req.path;
   if(!path || path.length == 0) throw "not_found";
   switch(path[0]) {
     case 'trend':
@@ -50,8 +52,7 @@ setHttpHandler(function(req) {
       result.trend.values = {};
       threshold = sharedGet('ddos_blackhole_pps');
       if(threshold) result.trend.values.threshold = threshold;
-      id = sharedGet('ddos_blackhole_controls_id') || 0;
-      result.trend.values.control_id = id;
+      result.trend.values.update = update;
       break;
     default: throw 'not_found';
   }
