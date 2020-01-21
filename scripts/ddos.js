@@ -107,7 +107,7 @@ setFlow('ddos_blackhole_protocol',
 
 function setDDoSThreshold(pps) {
   setThreshold('ddos_blackhole_attack',
-    {metric:'ddos_blackhole_target',value:threshold,byFlow:true,timeout:10}
+    {metric:'ddos_blackhole_target',value:threshold,byFlow:true,timeout:60}
   );
   sharedSet('ddos_blackhole_pps',pps);
 }
@@ -144,10 +144,16 @@ function block(address,info,operator) {
   updateControlCounts();
 }
 
-function allow(address,info,operator) {
+function allow(address,operator) {
   if(controls[address]) {
-    logInfo("DDoS allowing " + address);
     let rec = controls[address];
+    if(!operator) {
+      let evt = rec.info.event;
+      if(thresholdTriggered(evt.thresholdID,evt.agent,evt.dataSource+'.'+evt.metric,evt.flowKey)) {
+        return;
+      }
+    }
+    logInfo("DDoS allowing " + address);
     if('blocked' === rec.status) {
       if(bgpRemoveRoute(router_ip,address)) {
         delete controls[address];
@@ -180,7 +186,7 @@ setEventHandler(function(evt) {
   }
 
   // gather supporting data
-  var info = {group:group};
+  var info = {group:group,event:evt};
   var keys = metric(evt.agent,evt.dataSource+'.ddos_blackhole_protocol')[0].topKeys;
   if(keys) {
     let majorityThresh = evt.value / 2;
@@ -197,7 +203,7 @@ setEventHandler(function(evt) {
 setIntervalHandler(function(now) {
   var threshMs = block_minutes * 60000;
   for(var addr in controls) {
-    if(now - controls[addr].time > threshMs) allow(addr,{},false);
+    if(now - controls[addr].time > threshMs) allow(addr,false);
   }
 }, 60);
 
@@ -215,7 +221,7 @@ setHttpHandler(function(req) {
           break;
         case 'allow':
           var address = req.query.address[0];
-          if(address) allow(address,{},true);
+          if(address) allow(address,true);
           break;
         case 'enable':
           enabled = true;
