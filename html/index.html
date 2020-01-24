@@ -180,10 +180,13 @@ The following example shows the format:</p>
                 <tr class="odd"><td>ddos_blackhole.as</td><td>65000</td><td>Local AS number (e.g. 65000) to advertise to router</td></tr>
                 <tr class="even"><td>ddos_blackhole.id</td><td>0.6.6.6</td><td>Local identifier (e.g. 0.0.0.1) to advertise to router</td></tr>
                 <tr class="odd"><td>ddos_blackhole.community</td><td>65535:666</td><td>BGP community used to identify blackhole routes</td></tr>
-                <tr class="even"><td>ddos_blackhole.nexthop</td><td>192.0.2.1</td><td>BGP next hop used to identify blackhole routes</td></tr> 
-                <tr class="odd"><td>ddos_blackhole.externalgroup</td><td>external</td><td>Source address group for external traffic</td></tr>
-                <tr class="even"><td>ddos_blackhole.excludedgroups</td><td>external,private,multicast,exclude</td><td>Destination address groups to exclude as blackhole candidates</td></tr>
-                <tr class="odd"><td>ddos_blackhole.flow_seconds</td><td>2</td><td>Moving average (in seconds) used to smooth flow rates</td></tr>
+                <tr class="even"><td>ddos_blackhole.nexthop</td><td>192.0.2.1</td><td>BGP next hop used to identify blackhole routes</td></tr>
+                <tr class="odd"><td>ddos_blackhole.localpref</td><td>100</td><td>BGP local preference used to identify blackhole routes</td></tr> 
+                <tr class="even"><td>ddos_blackhole.externalgroup</td><td>external</td><td>Source address group for external traffic</td></tr>
+                <tr class="odd"><td>ddos_blackhole.excludedgroups</td><td>external,private,multicast,exclude</td><td>Destination address groups to exclude as blackhole candidates</td></tr>
+                <tr class="even"><td>ddos_blackhole.flow_seconds</td><td>2</td><td>Moving average (in seconds) used to smooth flow rates</td></tr>
+                <tr class="odd"><td>ddos_blackhole.threshold_seconds</td><td>60</td><td>Hold time for threshold before it will re-trigger</td></tr>
+                <tr class="even"><td>ddos_blackhole.esr</td><td>no</td><td>Ignore event if there are insufficient samples for an accurate reading</td></tr>
               </tbody>
             </table>
             <p>See <a href="http://sflow-rt.com/reference.php#properties">System Properties</a> for information on configuring startup settings.</p>
@@ -195,6 +198,6 @@ The following example shows the format:</p>
   <div id="dialog" title="Modify Control">
     <p><span id="target"></span></p>
   </div>
-  <div id="copyright">Copyright &copy; 2015-2017 InMon Corp. ALL RIGHTS RESERVED</div>
+  <div id="copyright">Copyright &copy; 2015-2020 InMon Corp. ALL RIGHTS RESERVED</div>
 </body>
 </html>

@@ -1,5 +1,5 @@
 $(function() { 
-  var dataURL = '../scripts/stats.js/trend/json';
+  var dataURL = '../scripts/ddos.js/trend/json';
   var controlsURL = '../scripts/ddos.js/controls/json';
   var thresholdURL = '../scripts/ddos.js/threshold/json';
   var blockMinutesURL = '../scripts/ddos.js/blockminutes/json';

@@ -1,8 +1,8 @@
 // author: InMon
 // version: 2.0
-// date: 6/15/2017
+// date: 1/24/2020
 // description: Blackhole DDoS flood attacks
-// copyright: Copyright (c) 2015-2017 InMon Corp.
+// copyright: Copyright (c) 2015-2020 InMon Corp.
 
 include(scriptdir()+'/inc/trend.js');
 
@@ -15,6 +15,7 @@ var localpref = getSystemProperty("ddos_blackhole.localpref")|| '100';
 
 var effectiveSamplingRateFlag = getSystemProperty("ddos_blackhole.esr") === "yes";
 var flow_t = getSystemProperty("ddos_blackhole.flow_seconds")|| '2';
+var threshold_t = getSystemProperty("ddos_blackhole.threshold_seconds") || '60';
 
 var externalGroup= getSystemProperty("ddos_blackhole.externalgroup")   || 'external';
 var excludedGroups= getSystemProperty("ddos_blackhole.excludedgroups") || 'external,private,multicast,exclude';
@@ -35,8 +36,10 @@ var block_minutes = storeGet('block_minutes') || 60;
 var controls = {};
 
 var update = 0;
+var counts = {};
 function updateControlCounts() {
-  var counts = { n: 0, blocked: 0, pending: 0, failed: 0, update: ++update };
+  update++;
+  counts = { n: 0, blocked: 0, pending: 0, failed: 0 };
   for(var addr in controls) {
     counts.n++;
     switch(controls[addr].status) {
@@ -51,7 +54,6 @@ function updateControlCounts() {
       break;
     } 
   }
-  sharedSet('ddos_blackhole_controls_counts',counts);
 }
 
 var enabled = storeGet('enabled') || false;
@@ -64,7 +66,6 @@ function blockRoute(address) {
 
 function bgpOpen() {
   bgpUp = true;
-  sharedSet('ddos_blackhole_connections',1);
 
   // re-install controls
   for(var addr in controls) {
@@ -84,7 +85,6 @@ function bgpOpen() {
 
 function bgpClose() {
   bgpUp = false;
-  sharedSet('ddos_blackhole_connections',0);
 
   // update control status
   for(var addr in controls) {
@@ -107,9 +107,8 @@ setFlow('ddos_blackhole_protocol',
 
 function setDDoSThreshold(pps) {
   setThreshold('ddos_blackhole_attack',
-    {metric:'ddos_blackhole_target',value:threshold,byFlow:true,timeout:60}
+    {metric:'ddos_blackhole_target',value:threshold,byFlow:true,timeout:threshold_t}
   );
-  sharedSet('ddos_blackhole_pps',pps);
 }
 
 setDDoSThreshold(threshold);
@@ -200,17 +199,54 @@ setEventHandler(function(evt) {
   block(ip,info,false);
 },['ddos_blackhole_attack']);
 
-setIntervalHandler(function(now) {
-  var threshMs = block_minutes * 60000;
-  for(var addr in controls) {
-    if(now - controls[addr].time > threshMs) allow(addr,false);
+var trend = new Trend(300,1);
+
+var other = '-other-';
+function calculateTopN(metric,n,minVal,total_pps) {
+  var total, top, topN, i, pps;
+  top = activeFlows('ALL',metric,n,minVal,'max');
+  var topN = {};
+  if(top) {
+    total = 0;
+    for(i in top) {
+      pps = top[i].value;
+      topN[top[i].key] = pps;
+      total += pps;
+    }
+    if(total_pps > total) topN[other] = total_pps - total;
   }
-}, 60);
+  return topN;
+}
+
+setIntervalHandler(function(now) {
+  var points = {};
+  points['controls'] = counts.n || 0;
+  points['controls_pending'] = counts.pending || 0;
+  points['controls_failed'] = counts.failed || 0;
+  points['controls_blocked'] = counts.blocked || 0;
+  points['connections'] = bgpUp ? 1 : 0;
+  points['top-5-targets'] = calculateTopN('ddos_blackhole_target',5,1,0);
+  points['top-5-protocols'] = calculateTopN('ddos_blackhole_protocol',5,1,0);
+  trend.addPoints(now,points);
+
+  var block_ms = 60000 * block_minutes;
+  for(var addr in controls) {
+    if(now - controls[addr].time > block_ms) allow(addr,false);
+  }
+}, 1);
 
 setHttpHandler(function(req) {
   var result, key, name, path = req.path;
   if(!path || path.length == 0) throw "not_found";
   switch(path[0]) {
+    case 'trend':
+      if(path.length > 1) throw "not_found";
+      result = {};
+      result.trend = req.query.after ? trend.after(parseInt(req.query.after)) : trend;
+      result.trend.values = {};
+      if(threshold) result.trend.values.threshold = threshold;
+      result.trend.values.update = update;
+      break;
     case 'controls':
       result = {};
       var action = '' + req.query.action;
