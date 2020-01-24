@@ -187,6 +187,10 @@ The following example shows the format:</p>
                 <tr class="even"><td>ddos_blackhole.flow_seconds</td><td>2</td><td>Moving average (in seconds) used to smooth flow rates</td></tr>
                 <tr class="odd"><td>ddos_blackhole.threshold_seconds</td><td>60</td><td>Hold time for threshold before it will re-trigger</td></tr>
                 <tr class="even"><td>ddos_blackhole.esr</td><td>no</td><td>Ignore event if there are insufficient samples for an accurate reading</td></tr>
+                <tr class="odd"><td>ddos_blackhole.syslog.host</td><td></td><td>IP address of syslog collector</td></tr>
+                <tr class="even"><td>ddos_blackhole.syslog.port</td><td>514</td><td>UDP port for syslog events</td></tr>
+                <tr class="odd"><td>ddos_blackhole.syslog.facility</td><td>16</td><td>Syslog facility, default local0</td></tr>
+                <tr class="even"><td>ddos_blackhole.syslog.severity</td><td>5</td><td>Syslog severity, default notice</td></tr>
               </tbody>
             </table>
             <p>See <a href="http://sflow-rt.com/reference.php#properties">System Properties</a> for information on configuring startup settings.</p>

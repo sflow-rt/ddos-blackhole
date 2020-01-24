@@ -20,6 +20,23 @@ var threshold_t = getSystemProperty("ddos_blackhole.threshold_seconds") || '60';
 var externalGroup= getSystemProperty("ddos_blackhole.externalgroup")   || 'external';
 var excludedGroups= getSystemProperty("ddos_blackhole.excludedgroups") || 'external,private,multicast,exclude';
 
+var syslogHost = getSystemProperty("ddos_blackhole.syslog.host");
+var syslogPort = getSystemProperty("ddos_blackhole.syslog.port") || '514';
+var syslogFacility = getSystemProperty("ddos_blackhole.syslog.facility") || '16'; // local0
+var syslogSeverity = getSystemProperty("ddos_blackhole.syslog.severity") || '5';  // notice
+
+function sendEvent(action,ip,group,stack) {
+  if(!syslogHost) return;
+
+  var msg = {app:'ddos-blackhole',action:action,ip:ip,group:group};
+  if(stack) msg.stack = stack;
+  try {
+    syslog(syslogHost,syslogPort,syslogFacility,syslogSeverity,msg);
+  } catch(e) {
+    logWarning("DDoS cannot send syslog to " + syslogHost); 
+  }
+}
+
 var defaultGroups = {
   external:['0.0.0.0/0'],
   private:['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16'],
@@ -115,7 +132,8 @@ setDDoSThreshold(threshold);
 
 function block(address,info,operator) {
   if(!controls[address]) {
-    logInfo("DDoS blocking " + address);
+    logInfo("DDoS blocking " + address + " " + info.group + (info.stack ? " " + info.stack : ""));
+    sendEvent('block',address,info.group,info.stack);
     let rec = { action: 'block', time: (new Date()).getTime(), status:'pending', info:info };
     controls[address] = rec;
     if(enabled || operator) {
@@ -152,7 +170,8 @@ function allow(address,operator) {
         return;
       }
     }
-    logInfo("DDoS allowing " + address);
+    logInfo("DDoS allowing " + address + " " + rec.info.group + (rec.info.stack ? " " + rec.info.stack : ""));
+    sendEvent('allow',address,rec.info.group,rec.info.stack);
     if('blocked' === rec.status) {
       if(bgpRemoveRoute(router_ip,address)) {
         delete controls[address];
