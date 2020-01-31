@@ -39,16 +39,26 @@ function sendEvent(action,ip,group,stack) {
 
 var defaultGroups = {
   external:['0.0.0.0/0'],
-  private:['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16'],
+  private:['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16','169.254.0.0/16'],
   multicast:['224.0.0.0/4']
 };
+
+var defaultExclude = getSystemProperty("ddos_blackhole.group.exclude");
+if(defaultExclude) {
+  defaultGroups.exclude = defaultExclude.split(',');
+}
+
+var defaultAllow = getSystemProperty("ddos_blackhole.group.allow");
+if(defaultAllow) {
+  defaultGroups.allow = defaultAllow.split(',');
+}
 
 var filter = 'group:ipsource:ddos_blackhole='+externalGroup;
 filter += '&group:ipdestination:ddos_blackhole!='+excludedGroups;
 
-var groups = storeGet('groups')               || defaultGroups;
-var threshold = storeGet('threshold')         || 1000000;
-var block_minutes = storeGet('block_minutes') || 60;
+var groups = storeGet('groups') || defaultGroups;
+var threshold = storeGet('threshold') || getSystemProperty("ddos_blackhole.threshold") || 1000000;
+var block_minutes = storeGet('block_minutes') || getSystemProperty("ddos_blackhole.blockminutes") || 60;
 
 var controls = {};
 
@@ -73,7 +83,7 @@ function updateControlCounts() {
   }
 }
 
-var enabled = storeGet('enabled') || false;
+var enabled = storeGet('enabled') || ("automatic" === getSystemProperty("ddos_blackhole.actions")) || false;
 
 var bgpUp = false;
 
