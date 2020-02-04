@@ -43,15 +43,12 @@ var defaultGroups = {
   multicast:['224.0.0.0/4']
 };
 
-var defaultExclude = getSystemProperty("ddos_blackhole.group.exclude");
-if(defaultExclude) {
-  defaultGroups.exclude = defaultExclude.split(',');
-}
-
-var defaultAllow = getSystemProperty("ddos_blackhole.group.allow");
-if(defaultAllow) {
-  defaultGroups.allow = defaultAllow.split(',');
-}
+getSystemPropertyNames()
+  .filter(p => p.match('^ddos_blackhole\\.group\\.'))
+  .forEach(function(prop) {
+    var [,,name] = prop.split('.');
+    defaultGroups[name] = getSystemProperty(prop).split(',');
+});
 
 var filter = 'group:ipsource:ddos_blackhole='+externalGroup;
 filter += '&group:ipdestination:ddos_blackhole!='+excludedGroups;
