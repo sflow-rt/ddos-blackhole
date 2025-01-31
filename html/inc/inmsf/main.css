@@ -1,0 +1,29 @@
+@import url('../base.css');
+
+/* Title bar and copyright bar */
+#titleBar {
+  background-color: #336;
+  color: #fff;
+  height: 29px;
+}
+
+#titleBar #logo {
+  width: 76px;
+  background: url(logo.png) no-repeat;
+  background-size: 76px 27px;
+  margin: -3px 5px 0 1px;
+  height: 27px;
+}
+
+#product {
+  padding-top: 4px;
+}
+
+#copyright {
+  color: #969696;
+  border-top: 1px solid #969696;
+  text-align: right;
+  font-size: 70%;
+  padding: .3em;
+}
+

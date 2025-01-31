@@ -1,0 +1,48 @@
+a:link {color:#00e}
+a:visited {color:#00e}
+a:hover {color: #c00}
+/* Get rid of hover effect on name links in FireFox,Safari */
+a[name]:hover { text-decoration: inherit; color: inherit; background: inherit; }
+
+body {
+  background-color: #fff;
+  color: #000;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1em;
+  margin: 0;
+}
+
+/* Title bar and copyright bar */
+#titleBar {
+  font-size: 120%;
+  font-weight: bold;
+  height: 32px;
+}
+
+#product {
+  float: left; 
+  padding-top: 10px
+}
+
+#titleBar #logo {
+  float: left; 
+  margin: -7px 3px 3px;
+  height: 27px;
+}
+
+#copyright {
+  font-size: 70%;
+  padding: .3em;
+  text-align: right;
+  clear: left;
+}
+
+h1 { font-size: 120% }
+h2 { font-size: 110% }
+h3 { font-size: 95% }
+ul,ol {margin: 10px 20px; padding: 0;}
+
+.stripchart {
+  margin: 20px;
+}
+
